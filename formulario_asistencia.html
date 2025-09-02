@@ -1,0 +1,161 @@
+<?php
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Asistencia METACOM</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7f7f7;
+            margin: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px 30px 10px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px #bbb;
+            border-top: 8px solid #ff7f2a;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 20px auto;
+            max-width: 180px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        h2 {
+            color: #ff7f2a;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #333;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #bbb;
+            background: #f9f9f9;
+            font-size: 1em;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ff7f2a;
+            background: #fff;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 24px;
+            background: #ff7f2a;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px #eee;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #d35400;
+        }
+        .scanner-box {
+            width: 100%;
+            min-height: 80px;
+            margin: 10px 0 0 0;
+        }
+        #mensaje-error {
+            color: #d8000c;
+            background: #ffd2d2;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+<div class="container">
+    <img src="WhatsApp Image 2024-10-18 at 9.57.59 AM.jpeg" alt="Logo METACOM" class="logo">
+    <h1>Registro de Asistencia METACOM</h1>
+    <h2>Escanea tu código de barras</h2>
+    <div id="notificacion" style="display:none; padding:12px; margin-bottom:18px; border-radius:6px; font-weight:bold; text-align:center; letter-spacing:1px;"></div>
+    <div id="mensaje-error">
+    <?php if(isset($_GET['error'])): ?>
+        <div style="color:#d8000c; background:#ffd2d2; padding:10px; border-radius:5px; margin-bottom:20px; text-align:center; font-weight:bold;">
+            <?php echo htmlspecialchars($_GET['error']); ?>
+        </div>
+    <?php endif; ?>
+    </div>
+    <form id="asistencia-form" action="registrar_asistencia.php" method="post" autocomplete="off">
+        <label for="id_empleado">Código de barras (ID empleado):</label>
+        <input type="text" id="id_empleado" name="id_empleado" required placeholder="Escanea o ingresa el código de barras">
+        <div id="qr-reader" class="scanner-box"></div>
+        <label for="tipo_registro">Tipo de registro:</label>
+        <select id="tipo_registro" name="tipo_registro" required>
+            <option value="entrada">Entrada</option>
+            <option value="salida">Salida</option>
+        </select>
+        <input type="hidden" id="fecha_hora" name="fecha_hora">
+        <button type="submit">Registrar Asistencia</button>
+    </form>
+</div>
+<script>
+function setupScanner(readerId, inputId) {
+    let scanner = new Html5QrcodeScanner(readerId, { fps: 10, qrbox: 200 });
+    scanner.render(function(decodedText) {
+        document.getElementById(inputId).value = decodedText;
+        scanner.clear();
+    });
+}
+window.onload = function() {
+    setupScanner('qr-reader', 'id_empleado');
+    // Manejar envío del formulario para notificación y fecha/hora local
+    document.getElementById('asistencia-form').addEventListener('submit', function(e) {
+        // Colocar fecha y hora local antes de enviar
+        var now = new Date();
+        var fechaHora = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+        document.getElementById('fecha_hora').value = fechaHora;
+    });
+
+    // Mostrar notificación si viene en la URL
+    const params = new URLSearchParams(window.location.search);
+    var noti = document.getElementById('notificacion');
+    if(params.get('ok')==='1') {
+        noti.textContent = '¡Asistencia registrada correctamente!';
+        noti.style.background = '#eafaf1';
+        noti.style.color = '#27ae60';
+        noti.style.border = '2px solid #27ae60';
+        noti.style.display = 'block';
+    } else if(params.get('error')) {
+        noti.textContent = decodeURIComponent(params.get('error'));
+        noti.style.background = '#fff4f0';
+        noti.style.color = '#e74c3c';
+        noti.style.border = '2px solid #e74c3c';
+        noti.style.display = 'block';
+    }
+}
+</script>
+</body>
+</html>
